@@ -100,6 +100,7 @@ def main():
         total_correct = 0
 
         for batch in trainloader:  # Load batch
+            print(1)
             images, labels = batch
             images = images.to(device)
             labels = labels.to(device)
