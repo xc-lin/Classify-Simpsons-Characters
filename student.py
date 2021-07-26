@@ -57,104 +57,114 @@ def transform(mode):
 class Network(nn.Module):
     def __init__(self):
         super().__init__()
-        self.first_conv = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3)
-        self.layer2 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer3 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
-        self.layer4 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
-        self.layer5 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
-        self.layer6 = nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1)
-        self.layer7 = nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1)
-        self.layer8 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
-        self.layer9 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
-        self.layer10 = nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1)
-        self.layer11 = nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1)
-        self.layer12 = nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1)
-        self.layer13 = nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1)
-        self.layer14 = nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1)
-        self.layer15 = nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1)
-        self.layer16 = nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1)
-        self.layer17 = nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1)
-        self.layer18 = nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1)
-        self.layer19 = nn.AdaptiveAvgPool2d((1, 1))
-        self.output = nn.Linear(512, 14)
-        self.relu = nn.ReLU()
-        self.norm1 = nn.BatchNorm2d(64)
-        self.norm2 = nn.BatchNorm2d(128)
-        self.norm3 = nn.BatchNorm2d(256)
-        self.norm4 = nn.BatchNorm2d(512)
-        self.sub1 = nn.Conv2d(64, 128, kernel_size=1, stride=2, padding=0)
-        self.sub2 = nn.Conv2d(128, 256, kernel_size=1, stride=2, padding=0)
-        self.sub3 = nn.Conv2d(256, 512, kernel_size=1, stride=2, padding=0)
+        self.init = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        )
+        self.stage1 = nn.Sequential(
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(64),
+        )
+
+        self.stage2_1 = nn.Sequential(
+            nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(128),
+        )
+
+        self.stage2_2 = nn.Sequential(
+            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(128),
+        )
+
+        self.stage3_1 = nn.Sequential(
+            nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(256),
+        )
+
+        self.stage3_2 = nn.Sequential(
+            nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(256),
+        )
+
+        self.stage4_1 = nn.Sequential(
+            nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1, bias=False),
+            nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(512),
+        )
+
+        self.stage4_2 = nn.Sequential(
+            nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(512),
+        )
+
+        self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.output_layer = nn.Linear(512, 14)
+
+        self.sub64_128 = nn.Conv2d(64, 128, kernel_size=1, stride=2, padding=0)
+        self.sub128_256 = nn.Conv2d(128, 256, kernel_size=1, stride=2, padding=0)
+        self.sub256_512 = nn.Conv2d(256, 512, kernel_size=1, stride=2, padding=0)
+
+        self.relu = nn.ReLU(inplace=True)
+        self.norm64 = nn.BatchNorm2d(64)
 
     def forward(self, t):
-        layer1 = self.first_conv(t)
-        layer1 = self.rn(layer1, 1)
-        layer2 = self.layer2(layer1)
+        # return self.resnet18.forward(t)
+        init = self.init(t)
 
+        x = self.stage1(init)
+        stage1_1_out = self.relu(x + init)
 
-        layer3 = self.layer3(layer2)
-        layer3 = self.rn(layer3, 1)
-        layer4 = self.layer4(layer3)
-        layer4 = self.norm1(layer4)
+        x = self.stage1(stage1_1_out)
+        stage1_2_out = self.relu(x + stage1_1_out)
 
-        layer5 = self.layer5(self.relu(layer4 + layer2))
-        layer5 = self.rn(layer5, 1)
-        layer6 = self.layer6(layer5)
-        layer6 = self.norm1(layer6)
+        x = self.stage2_1(stage1_2_out)
+        stage1_2_out_down = self.sub64_128(stage1_2_out)
+        stage2_1_out = self.relu(stage1_2_out_down + x)
 
-        layer7 = self.layer7(self.relu(layer6 + layer4 + layer2))
-        layer7 = self.rn(layer7, 2)
-        layer8 = self.layer8(layer7)
-        layer8 = self.norm2(layer8)
+        x = self.stage2_2(stage2_1_out)
+        stage2_2_out = self.relu(stage2_1_out + x)
 
-        layer_sub1 = self.sub1(self.relu(layer6 + layer4 + layer2))
-        layer_sub1 = self.norm2(layer_sub1)
-        layer9 = self.layer9(self.relu(layer8 + layer_sub1))
-        layer9 = self.rn(layer9, 2)
-        layer10 = self.layer10(layer9)
-        layer10 = self.norm2(layer10)
+        x = self.stage3_1(stage2_2_out)
+        stage2_2_out_down = self.sub128_256(stage2_2_out)
+        stage3_1_out = self.relu(stage2_2_out_down + x)
 
-        layer11 = self.layer11(self.relu(layer10 + layer8 + layer_sub1))
-        layer11 = self.rn(layer11, 3)
-        layer12 = self.layer12(layer11)
-        layer12 = self.norm3(layer12)
+        x = self.stage3_2(stage3_1_out)
+        stage3_2_out = self.relu(stage3_1_out + x)
 
-        layer_sub2 = self.sub2(self.relu(layer10 + layer8 + layer_sub1))
-        layer_sub2 = self.norm3(layer_sub2)
-        layer13 = self.layer13(self.relu(layer12 + layer_sub2))
-        layer13 = self.rn(layer13, 3)
-        layer14 = self.layer14(layer13)
-        layer14 = self.norm3(layer14)
+        x = self.stage4_1(stage3_2_out)
+        stage3_2_out_down = self.sub256_512(stage3_2_out)
+        stage4_1_out = self.relu(stage3_2_out_down + x)
 
-        layer15 = self.layer15(self.relu(layer14 + layer12 + layer_sub2))
-        layer15 = self.rn(layer15, 4)
-        layer16 = self.layer16(layer15)
-        layer16 = self.norm4(layer16)
+        x = self.stage4_2(stage4_1_out)
+        stage4_2_out = self.relu(stage4_1_out + x)
+        avg = self.avg_pool(stage4_2_out)
 
-        layer_sub3 = self.sub3(self.relu(layer14 + layer12 + layer_sub2))
-        layer_sub3 = self.norm4(layer_sub3)
-        layer17 = self.layer17(self.relu(layer16 + layer_sub3))
-        layer17 = self.rn(layer17, 4)
-        layer18 = self.layer18(layer17)
-        layer18 = self.norm4(layer18)
+        flatten = torch.flatten(avg, 1)
+        output = self.output_layer(flatten)
 
-        layer19 = self.layer19(self.relu(layer18 + layer16 + layer_sub3))
-
-        layer19_flattened = torch.flatten(layer19, 1)
-        output = self.output(layer19_flattened)
         return output
-
-    def rn(self, layer, normNum):
-        if normNum == 1:
-            layer = self.norm1(layer)
-        elif normNum == 2:
-            layer = self.norm2(layer)
-        elif normNum == 3:
-            layer = self.norm3(layer)
-        elif normNum == 4:
-            layer = self.norm4(layer)
-        layer = self.relu(layer)
-        return layer
 
 
 class loss(nn.Module):
