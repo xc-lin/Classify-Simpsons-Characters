@@ -67,59 +67,68 @@ class Network(nn.Module):
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         )
         self.stage1 = nn.Sequential(
-            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(64),
             nn.ReLU(inplace=True),
             nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
         )
 
         self.stage2_1 = nn.Sequential(
+            nn.BatchNorm2d(64),
+            nn.ReLU(inplace=True),
             nn.Conv2d(64, 128, kernel_size=3, stride=2, padding=1, bias=False),
             nn.BatchNorm2d(128),
             nn.ReLU(inplace=True),
             nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(128),
+
         )
 
         self.stage2_2 = nn.Sequential(
-            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(128),
             nn.ReLU(inplace=True),
             nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1, bias=False),
+
         )
 
         self.stage3_1 = nn.Sequential(
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
             nn.Conv2d(128, 256, kernel_size=3, stride=2, padding=1, bias=False),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=True),
             nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(256),
         )
 
         self.stage3_2 = nn.Sequential(
-            nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(256),
             nn.ReLU(inplace=True),
             nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1, bias=False),
         )
 
         self.stage4_1 = nn.Sequential(
+            nn.BatchNorm2d(256),
+            nn.ReLU(inplace=True),
             nn.Conv2d(256, 512, kernel_size=3, stride=2, padding=1, bias=False),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=True),
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(512),
         )
 
         self.stage4_2 = nn.Sequential(
-            nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(512),
             nn.ReLU(inplace=True),
             nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1, bias=False),
             nn.BatchNorm2d(512),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(512, 512, kernel_size=3, stride=1, padding=1, bias=False),
         )
 
         self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
@@ -137,31 +146,31 @@ class Network(nn.Module):
         init = self.init(t)
 
         x = self.stage1(init)
-        stage1_1_out = self.relu(x + init)
+        stage1_1_out = (x + init)
 
         x = self.stage1(stage1_1_out)
-        stage1_2_out = self.relu(x + stage1_1_out)
+        stage1_2_out = (x + stage1_1_out)
 
         x = self.stage2_1(stage1_2_out)
         stage1_2_out_down = self.sub64_128(stage1_2_out)
-        stage2_1_out = self.relu(stage1_2_out_down + x)
+        stage2_1_out = (stage1_2_out_down + x)
 
         x = self.stage2_2(stage2_1_out)
-        stage2_2_out = self.relu(stage2_1_out + x)
+        stage2_2_out = (stage2_1_out + x)
 
         x = self.stage3_1(stage2_2_out)
         stage2_2_out_down = self.sub128_256(stage2_2_out)
-        stage3_1_out = self.relu(stage2_2_out_down + x)
+        stage3_1_out = (stage2_2_out_down + x)
 
         x = self.stage3_2(stage3_1_out)
-        stage3_2_out = self.relu(stage3_1_out + x)
+        stage3_2_out = (stage3_1_out + x)
 
         x = self.stage4_1(stage3_2_out)
         stage3_2_out_down = self.sub256_512(stage3_2_out)
-        stage4_1_out = self.relu(stage3_2_out_down + x)
+        stage4_1_out = (stage3_2_out_down + x)
 
         x = self.stage4_2(stage4_1_out)
-        stage4_2_out = self.relu(stage4_1_out + x)
+        stage4_2_out = (stage4_1_out + x)
         avg = self.avg_pool(stage4_2_out)
 
         flatten = torch.flatten(avg, 1)
